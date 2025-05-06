@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Budget Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .shadow-custom {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary {
+      transition: background-color 0.3s ease;
+    }
+    .btn-primary:hover {
+      background-color: #2f855a;
+    }
+    .btn-danger {
+      transition: background-color 0.3s ease;
+    }
+    .btn-danger:hover {
+      background-color: #c53030;
+    }
+    .btn-secondary {
+      transition: background-color 0.3s ease;
+    }
+    .btn-secondary:hover {
+      background-color: #4a6977;
+    }
+    .btn-info {
+      transition: background-color 0.3s ease;
+    }
+    .btn-info:hover {
+      background-color: #2b6cb0;
+    }
+    .btn-nav {
+      transition: background-color 0.3s ease;
+    }
+    .btn-nav:hover:not(:disabled) {
+      background-color: #2f855a;
+    }
+    .btn-nav:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    button {
+      cursor: pointer;
+      position: relative;
+      z-index: 10;
+    }
+    /* Animated gradient background */
+    .gradient-bg {
+      background: linear-gradient(45deg, #2f855a, #48bb78, #2f855a);
+      background-size: 200% 200%;
+      animation: gradientShift 8s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* Input field with icons */
+    .input-with-icon {
+      position: relative;
+    }
+    .input-with-icon svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      color: #4a6977;
+    }
+    .input-with-icon input {
+      padding-left: 40px;
+    }
+    /* Pie chart container animation */
+    .chart-container {
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+    .chart-container:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 15px rgba(47, 133, 90, 0.5);
+    }
+    /* Progress ring for savings */
+    .progress-ring {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+    }
+    .progress-ring__circle {
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+    .progress-ring__text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
+      font-weight: bold;
+      color: #2f855a;
+    }
+    /* Calculator button icon */
+    .btn-with-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    /* Calculator page styles */
+    .calculator-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 300px;
+      margin: 20px auto;
+    }
+    .calculator-btn {
+      padding: 15px;
+      font-size: 18px;
+      border-radius: 8px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .calculator-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .calculator-display {
+      grid-column: span 4;
+      padding: 15px;
+      font-size: 24px;
+      text-align: right;
+      background-color: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<!-- Page 1: Login Page -->
+<div id="loginPage" class="flex items-center justify-center min-h-screen bg-gray-200">
+  <div class="bg-white p-8 rounded-lg shadow-custom max-w-md w-full fade-in gradient-bg">
+    <h2 class="text-2xl font-bold text-white text-center mb-6">Login to Budget Tracker</h2>
+    <input type="text" id="username" placeholder="Enter your name" class="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-green-500">
+    <button onclick="login()" class="w-full p-3 bg-green-600 text-white rounded-lg btn-primary">Login</button>
+    <div class="flex justify-between mt-6">
+      <button onclick="navigatePage(-1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav" disabled>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      </button>
+      <button onclick="navigatePage(1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Page 2: Budget Calculation Page -->
+<div class="container mx-auto p-6 max-w-3xl hidden fade-in" id="budgetPage">
+  <div class="bg-white p-8 rounded-lg shadow-custom">
+    <h2 class="text-3xl font-bold text-gray-800 text-center mb-4">Monthly Budget Calculator</h2>
+    <h3 id="userGreeting" class="text-xl text-gray-600 text-center mb-6"></h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="input-with-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <input type="number" id="income" placeholder="Income" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+      <div class="input-with-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        <input type="number" id="rent" placeholder="Rent" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+      <div class="input-with-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <input type="number" id="food" placeholder="Food" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+      <div class="input-with-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <input type="number" id="utilities" placeholder="Utilities" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+      <div class="input-with-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10h14M3 14h18M7 6h10"></path></svg>
+        <input type="number" id="transport" placeholder="Transport" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+      <div class="input-with-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <input type="number" id="loans" placeholder="Loans" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+      <div class="input-with-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <input type="number" id="emi" placeholder="EMI" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+      <div class="input-with-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        <input type="number" id="otherExpenses" placeholder="Other Expenses" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <label for="currency" class="block text-sm font-medium text-gray-700">Currency</label>
+      <select id="currency" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+        <option value="$">USD ($)</option>
+        <option value="€">EUR (€)</option>
+        <option value="£">GBP (£)</option>
+        <option value="₹">INR (₹)</option>
+        <option value="¥">JPY (¥)</option>
+        <option value="C$">CAD (C$)</option>
+        <option value="A$">AUD (A$)</option>
+      </select>
+    </div>
+
+    <div class="flex space-x-4 mt-6">
+      <button onclick="calculate()" class="flex-1 p-3 bg-green-600 text-white rounded-lg btn-primary">Calculate</button>
+    </div>
+    <div class="flex justify-between mt-6">
+      <button onclick="navigatePage(-1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      </button>
+      <button onclick="navigatePage(1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Page 3: Results Page with Pie Chart -->
+<div class="container mx-auto p-6 max-w-3xl hidden fade-in" id="resultsPage">
+  <div class="bg-white p-8 rounded-lg shadow-custom">
+    <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">Budget Overview</h2>
+    <div class="result p-4 bg-green-50 rounded-lg text-center mb-8">
+      <div id="budgetSummary" class="text-lg text-gray-800"></div>
+    </div>
+    <div class="chart-container flex justify-center">
+      <canvas id="budgetChart" class="max-w-full" width="500" height="500"></canvas>
+    </div>
+    <button onclick="showDailyExpensePage()" class="w-full p-3 mt-6 bg-green-600 text-white rounded-lg btn-primary">Daily Expense Tracker</button>
+    <div class="flex justify-between mt-6">
+      <button onclick="navigatePage(-1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      </button>
+      <button onclick="navigatePage(1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Page 4: Daily Expense Tracker Page -->
+<div class="container mx-auto p-6 max-w-3xl hidden fade-in" id="dailyExpensePage">
+  <div class="bg-white p-8 rounded-lg shadow-custom">
+    <h2 class="text-3xl font-bold text-gray-800 text-center mb-4">Daily Expense Tracker</h2>
+    <div class="progress-ring mt-4 mb-6">
+      <svg width="120" height="120">
+        <circle class="progress-ring__circle" stroke="#e5e7eb" stroke-width="10" fill="transparent" r="50" cx="60" cy="60"/>
+        <circle class="progress-ring__circle" stroke="#2f855a" stroke-width="10" fill="transparent" r="50" cx="60" cy="60" stroke-dasharray="314" stroke-dashoffset="314"/>
+      </svg>
+      <div class="progress-ring__text" id="savingsProgress">0%</div>
+    </div>
+    <label for="dailyExpense" class="block text-sm font-medium text-gray-700">Today's Expense</label>
+    <input type="number" id="dailyExpense" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+    <label for="expenseNote" class="block text-sm font-medium text-gray-700 mt-4">Note</label>
+    <textarea id="expenseNote" rows="3" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+    <button onclick="saveDailyExpense()" class="w-full p-3 mt-4 bg-green-600 text-white rounded-lg btn-primary">Today's Expense</button>
+    <div class="history-box mt-6 p-4 bg-gray-50 rounded-lg hidden" id="historyBox">
+      <h4 class="text-lg font-semibold text-gray-800">Daily Expense History</h4>
+      <div id="expenseHistory" class="mt-2"></div>
+    </div>
+    <button onclick="resetMonthlyBudget()" class="w-full p-3 mt-4 bg-gray-600 text-white rounded-lg btn-secondary">Reset</button>
+    <div class="result mt-4 p-4 bg-green-50 rounded-lg text-center hidden" id="savingsResult"></div>
+    <div class="history-box mt-6 p-4 bg-gray-50 rounded-lg">
+      <h4 class="text-lg font-semibold text-gray-800">Monthly Savings History</h4>
+      <div id="savingsHistory" class="mt-2"></div>
+    </div>
+    <button onclick="showCalculatorPage()" class="w-full p-3 mt-4 bg-blue-600 text-white rounded-lg btn-info btn-with-icon">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m-3 0v10m-3-7h6m-6 4h6m-9-7h2m0 4h2m0 4h2m-8-8h2m0 4h2m0 4h2"></path></svg>
+      Calculator
+    </button>
+    <button onclick="logout()" class="w-full p-3 mt-4 bg-red-600 text-white rounded-lg btn-danger">Logout</button>
+    <div class="flex justify-between mt-6">
+      <button onclick="navigatePage(-1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      </button>
+      <button onclick="navigatePage(1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Page 5: Calculator Page -->
+<div class="container mx-auto p-6 max-w-3xl hidden fade-in" id="calculatorPage">
+  <div class="bg-white p-8 rounded-lg shadow-custom gradient-bg">
+    <h2 class="text-3xl font-bold text-white text-center mb-6">Simple Calculator</h2>
+    <div class="calculator-grid">
+      <input type="text" id="calculatorDisplay" class="calculator-display" readonly value="0">
+      <button onclick="clearCalculator()" class="calculator-btn bg-gray-200 text-gray-800">C</button>
+      <button onclick="appendToDisplay('(')" class="calculator-btn bg-gray-200 text-gray-800">(</button>
+      <button onclick="appendToDisplay(')')" class="calculator-btn bg-gray-200 text-gray-800">)</button>
+      <button onclick="appendToDisplay('/')" class="calculator-btn bg-green-600 text-white">÷</button>
+      <button onclick="appendToDisplay('7')" class="calculator-btn bg-gray-100 text-gray-800">7</button>
+      <button onclick="appendToDisplay('8')" class="calculator-btn bg-gray-100 text-gray-800">8</button>
+      <button onclick="appendToDisplay('9')" class="calculator-btn bg-gray-100 text-gray-800">9</button>
+      <button onclick="appendToDisplay('*')" class="calculator-btn bg-green-600 text-white">×</button>
+      <button onclick="appendToDisplay('4')" class="calculator-btn bg-gray-100 text-gray-800">4</button>
+      <button onclick="appendToDisplay('5')" class="calculator-btn bg-gray-100 text-gray-800">5</button>
+      <button onclick="appendToDisplay('6')" class="calculator-btn bg-gray-100 text-gray-800">6</button>
+      <button onclick="appendToDisplay('-')" class="calculator-btn bg-green-600 text-white">-</button>
+      <button onclick="appendToDisplay('1')" class="calculator-btn bg-gray-100 text-gray-800">1</button>
+      <button onclick="appendToDisplay('2')" class="calculator-btn bg-gray-100 text-gray-800">2</button>
+      <button onclick="appendToDisplay('3')" class="calculator-btn bg-gray-100 text-gray-800">3</button>
+      <button onclick="appendToDisplay('+')" class="calculator-btn bg-green-600 text-white">+</button>
+      <button onclick="appendToDisplay('0')" class="calculator-btn bg-gray-100 text-gray-800">0</button>
+      <button onclick="appendToDisplay('.')" class="calculator-btn bg-gray-100 text-gray-800">.</button>
+      <button onclick="calculateResult()" class="calculator-btn bg-blue-600 text-white col-span-2">=</button>
+    </div>
+    <div class="flex justify-between mt-6">
+      <button onclick="navigatePage(-1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      </button>
+      <button onclick="navigatePage(1)" class="p-3 bg-green-600 text-white rounded-lg btn-nav" disabled>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const pages = [
+    document.getElementById("loginPage"),
+    document.getElementById("budgetPage"),
+    document.getElementById("resultsPage"),
+    document.getElementById("dailyExpensePage"),
+    document.getElementById("calculatorPage")
+  ];
+  let currentPageIndex = 0;
+  const historyBox = document.getElementById("historyBox");
+
+  window.onload = function() {
+    const user = localStorage.getItem("username");
+    if (user) {
+      document.getElementById("userGreeting").innerText = `Welcome, ${user}!`;
+      currentPageIndex = 1;
+      showPage(pages[currentPageIndex]);
+      loadSavedData();
+    } else {
+      currentPageIndex = 0;
+      showPage(pages[currentPageIndex]);
+    }
+    checkDailyReminder();
+    loadDailyHistory();
+    loadSavingsHistory();
+    updateSavingsProgress();
+  };
+
+  function showPage(page) {
+    pages.forEach(p => p.style.display = "none");
+    page.style.display = "block";
+    updateNavigationButtons();
+  }
+
+  function navigatePage(direction) {
+    const newIndex = currentPageIndex + direction;
+    if (newIndex >= 0 && newIndex < pages.length) {
+      if (newIndex === 0 && localStorage.getItem("username")) {
+        return;
+      }
+      currentPageIndex = newIndex;
+      showPage(pages[currentPageIndex]);
+    }
+  }
+
+  function updateNavigationButtons() {
+    const leftButtons = document.querySelectorAll(".btn-nav:nth-child(1)");
+    const rightButtons = document.querySelectorAll(".btn-nav:nth-child(2)");
+    leftButtons.forEach(btn => btn.disabled = currentPageIndex === 0 || (currentPageIndex === 1 && localStorage.getItem("username")));
+    rightButtons.forEach(btn => btn.disabled = currentPageIndex === pages.length - 1);
+  }
+
+  function login() {
+    const user = document.getElementById("username").value;
+    if (user.trim() !== "") {
+      localStorage.setItem("username", user);
+      document.getElementById("userGreeting").innerText = `Welcome, ${user}!`;
+      currentPageIndex = 1;
+      showPage(pages[currentPageIndex]);
+      loadSavedData();
+    } else {
+      alert("Please enter a valid username.");
+    }
+  }
+
+  function logout() {
+    console.log("Logout button clicked");
+    if (confirm("Are you sure you want to logout?")) {
+      try {
+        localStorage.clear();
+        currentPageIndex = 0;
+        showPage(pages[currentPageIndex]);
+        location.reload();
+      } catch (error) {
+        console.error("Logout error:", error);
+        alert("An error occurred during logout. Please try again.");
+      }
+    }
+  }
+
+  function calculate() {
+    const currency = document.getElementById("currency").value;
+    const income = parseFloat(document.getElementById("income").value) || 0;
+    const rent = parseFloat(document.getElementById("rent").value) || 0;
+    const food = parseFloat(document.getElementById("food").value) || 0;
+    const utilities = parseFloat(document.getElementById("utilities").value) || 0;
+    const transport = parseFloat(document.getElementById("transport").value) || 0;
+    const loans = parseFloat(document.getElementById("loans").value) || 0;
+    const emi = parseFloat(document.getElementById("emi").value) || 0;
+    const otherExpenses = parseFloat(document.getElementById("otherExpenses").value) || 0;
+
+    const totalExpenses = rent + food + utilities + transport + loans + emi + otherExpenses;
+    const balance = income - totalExpenses;
+
+    const dailyHistory = JSON.parse(localStorage.getItem("dailyHistory")) || [];
+    const dailyTotal = dailyHistory.reduce((acc, entry) => acc + entry.amount, 0);
+
+    const expenses = {
+      Rent: rent,
+      Food: food,
+      Utilities: utilities,
+      Transport: transport,
+      Loans: loans,
+      EMI: emi,
+      "Other Expenses": otherExpenses,
+      "Daily Expenses": dailyTotal,
+      "Remaining Balance": balance - dailyTotal > 0 ? balance - dailyTotal : 0
+    };
+
+    document.getElementById("budgetSummary").innerHTML = `
+      <strong class="text-gray-800">Total Expenses:</strong> ${currency}${(totalExpenses + dailyTotal).toFixed(2)}<br>
+      <strong class="text-gray-800">Remaining Balance:</strong> ${currency}${(balance - dailyTotal).toFixed(2)}
+    `;
+
+    localStorage.setItem("income", income);
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+    localStorage.setItem("currency", currency);
+    localStorage.setItem("lastBalance", (balance - dailyTotal).toFixed(2));
+
+    renderChart(expenses);
+    updateSavingsProgress();
+    currentPageIndex = 2;
+    showPage(pages[currentPageIndex]);
+  }
+
+  function loadSavedData() {
+    const income = localStorage.getItem("income");
+    const expenses = JSON.parse(localStorage.getItem("expenses"));
+    const currency = localStorage.getItem("currency") || "$";
+    document.getElementById("currency").value = currency;
+
+    if (income) document.getElementById("income").value = income;
+    if (expenses) {
+      document.getElementById("rent").value = expenses.Rent || 0;
+      document.getElementById("food").value = expenses.Food || 0;
+      document.getElementById("utilities").value = expenses.Utilities || 0;
+      document.getElementById("transport").value = expenses.Transport || 0;
+      document.getElementById("loans").value = expenses.Loans || 0;
+      document.getElementById("emi").value = expenses.EMI || 0;
+      document.getElementById("otherExpenses").value = expenses["Other Expenses"] || 0;
+      document.getElementById("budgetSummary").innerHTML = `
+        <strong class="text-gray-800">Total Expenses:</strong> ${currency}${(Object.values(expenses).reduce((acc, val) => acc + (val || 0), 0) - expenses["Remaining Balance"]).toFixed(2)}<br>
+        <strong class="text-gray-800">Remaining Balance:</strong> ${currency}${expenses["Remaining Balance"].toFixed(2)}
+      `;
+      renderChart(expenses);
+      updateSavingsProgress();
+    }
+  }
+
+  function saveDailyExpense() {
+    const amount = parseFloat(document.getElementById("dailyExpense").value);
+    const note = document.getElementById("expenseNote").value;
+    const today = new Date().toLocaleDateString();
+    let history = JSON.parse(localStorage.getItem("dailyHistory")) || [];
+    if (!isNaN(amount) && amount > 0) {
+      history.push({ date: today, amount, note });
+      localStorage.setItem("dailyHistory", JSON.stringify(history));
+      document.getElementById("dailyExpense").value = "";
+      document.getElementById("expenseNote").value = "";
+    }
+    historyBox.style.display = "block";
+    loadDailyHistory();
+    updateSavingsProgress();
+  }
+
+  function loadDailyHistory() {
+    const historyBox = document.getElementById("expenseHistory");
+    historyBox.innerHTML = "";
+    const history = JSON.parse(localStorage.getItem("dailyHistory")) || [];
+    history.forEach(entry => {
+      const div = document.createElement("div");
+      div.className = "border-b border-gray-200 py-2 text-gray-700";
+      div.textContent = `${entry.date}: ${entry.amount.toFixed(2)} - ${entry.note || 'No note'}`;
+      historyBox.appendChild(div);
+    });
+  }
+
+  function checkDailyReminder() {
+    const now = new Date();
+    const reminderHour = 22;
+    if (now.getHours() === reminderHour && !localStorage.getItem("reminderShown")) {
+      alert("Reminder: Please enter how much money you spent today.");
+      localStorage.setItem("reminderShown", "true");
+      setTimeout(() => localStorage.removeItem("reminderShown"), 24 * 60 * 60 * 1000);
+    }
+  }
+
+  function showDailyExpensePage() {
+    currentPageIndex = 3;
+    showPage(pages[currentPageIndex]);
+    historyBox.style.display = "none";
+    loadDailyHistory();
+    updateSavingsProgress();
+  }
+
+  function resetMonthlyBudget() {
+    console.log("Reset button clicked");
+    if (confirm("Are you sure you want to reset this month's data?")) {
+      try {
+        const currency = localStorage.getItem("currency") || "$";
+        const lastBalance = parseFloat(localStorage.getItem("lastBalance")) || 0;
+        const savingsHistory = JSON.parse(localStorage.getItem("savingsHistory")) || [];
+        const monthYear = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+        savingsHistory.push({ month: monthYear, savings: lastBalance, currency });
+        localStorage.setItem("savingsHistory", JSON.stringify(savingsHistory));
+
+        document.getElementById("savingsResult").style.display = "block";
+        document.getElementById("savingsResult").innerHTML = `<strong class="text-gray-800">Your savings this month:</strong> ${currency}${lastBalance.toFixed(2)}`;
+
+        localStorage.removeItem("income");
+        localStorage.removeItem("expenses");
+        localStorage.removeItem("dailyHistory");
+        localStorage.removeItem("lastBalance");
+
+        document.getElementById("income").value = "";
+        document.getElementById("rent").value = "";
+        document.getElementById("food").value = "";
+        document.getElementById("utilities").value = "";
+        document.getElementById("transport").value = "";
+        document.getElementById("loans").value = "";
+        document.getElementById("emi").value = "";
+        document.getElementById("otherExpenses").value = "";
+        document.getElementById("dailyExpense").value = "";
+        document.getElementById("expenseNote").value = "";
+        document.getElementById("budgetSummary").innerHTML = "";
+        historyBox.style.display = "none";
+        renderChart({});
+        loadDailyHistory();
+        loadSavingsHistory();
+        updateSavingsProgress();
+
+        currentPageIndex = 1;
+        showPage(pages[currentPageIndex]);
+      } catch (error) {
+        console.error("Reset error:", error);
+        alert("An error occurred during reset. Please try again.");
+      }
+    }
+  }
+
+  function loadSavingsHistory() {
+    const savingsHistoryBox = document.getElementById("savingsHistory");
+    savingsHistoryBox.innerHTML = "";
+    const history = JSON.parse(localStorage.getItem("savingsHistory")) || [];
+    history.forEach(entry => {
+      const div = document.createElement("div");
+      div.className = "border-b border-gray-200 py-2 text-gray-700";
+      div.textContent = `${entry.month}: ${entry.currency}${entry.savings.toFixed(2)}`;
+      savingsHistoryBox.appendChild(div);
+    });
+  }
+
+  function updateSavingsProgress() {
+    const income = parseFloat(localStorage.getItem("income")) || 0;
+    const lastBalance = parseFloat(localStorage.getItem("lastBalance")) || 0;
+    const progressPercent = income > 0 ? (lastBalance / income) * 100 : 0;
+    const progressText = document.getElementById("savingsProgress");
+    const progressCircle = document.querySelector(".progress-ring__circle:nth-child(2)");
+    const circumference = 2 * Math.PI * 50;
+    const offset = circumference - (progressPercent / 100) * circumference;
+
+    progressText.textContent = `${Math.round(progressPercent)}%`;
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  function showCalculatorPage() {
+    currentPageIndex = 4;
+    showPage(pages[currentPageIndex]);
+    document.getElementById("calculatorDisplay").value = "0";
+  }
+
+  let chart;
+  function renderChart(data) {
+    const ctx = document.getElementById("budgetChart").getContext("2d");
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: Object.keys(data),
+        datasets: [{
+          label: 'Budget Breakdown',
+          data: Object.values(data),
+          backgroundColor: ['#ff6384','#36a2eb','#ffce56','#4bc0c0','#9966ff','#8bc34a','#ff9800','#c0ca33'],
+          borderColor: '#ffffff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: {
+          animateScale: true,
+          animateRotate: true,
+          duration: 1000,
+          easing: 'easeOutQuart'
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: { size: 14 },
+              padding: 20
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Calculator Functions
+  function appendToDisplay(value) {
+    const display = document.getElementById("calculatorDisplay");
+    if (display.value === "0" && value !== ".") {
+      display.value = value;
+    } else {
+      display.value += value;
+    }
+  }
+
+  function clearCalculator() {
+    document.getElementById("calculatorDisplay").value = "0";
+  }
+
+  function calculateResult() {
+    const display = document.getElementById("calculatorDisplay");
+    try {
+      const result = eval(display.value);
+      display.value = Number.isFinite(result) ? result.toFixed(2) : "Error";
+    } catch (error) {
+      display.value = "Error";
+    }
+  }
+</script>
+
+</body>
+</html>
